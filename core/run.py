@@ -58,6 +58,6 @@ def update_expense(
 @app.delete("/expenses/{expense_id}")
 def delete_expense(expense_id: int = Path(..., ge=1)):
     if expense_id not in expenses:
-        raise HTTPException(status_code=404, detail="Expense not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
     del expenses[expense_id]
     return {"message": f"Expense {expense_id} deleted successfully"} 
