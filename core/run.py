@@ -52,7 +52,7 @@ def update_expense(
         "amount": amount,
         "description": description
     })
-    
+    return JSONResponse(content=f'Update {expense_id} sucssesfully. ')
 
 
 @app.delete("/expenses/{expense_id}")
