@@ -9,6 +9,11 @@ expenses: Dict[int, Dict] = {}
 current_id = 0
 
 @app.get('/')
+def roote():
+    return JSONResponse(content={'message':'Hello'})
+
+
+@app.get('/expenses')
 def get_all_expenses():
     content = expenses
     return JSONResponse(content=content, status_code=status.HTTP_200_OK)
