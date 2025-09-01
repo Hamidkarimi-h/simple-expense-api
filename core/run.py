@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status, Path, Query
+from fastapi import FastAPI, HTTPException, status, Path, Query, Body
 from fastapi.responses import JSONResponse
 from typing import Dict
 
@@ -10,7 +10,7 @@ current_id = 0
 
 @app.get('/')
 def roote():
-    return JSONResponse(content={'message':'Hello'})
+    return JSONResponse(content={'message':'this is main page'})
 
 
 @app.get('/expenses')
@@ -20,7 +20,7 @@ def get_all_expenses():
 
 
 @app.post('/create')
-def create_expense(item_name:str= Query(...), amount:float=Query(gt=0), description:str=Query(default='')):
+def create_expense(item_name:str= Body(embed=True), amount:float=Body(ge=0), description:str=Body(default='')):
     global current_id
     current_id += 1
     
@@ -45,9 +45,9 @@ def get_expense(expense_id: int = Path(..., ge=1)):
 @app.put("/expenses/{expense_id}")
 def update_expense(
     expense_id: int = Path(..., ge=1),
-    item_name: str = Query(...),
-    amount: float = Query(..., gt=0),
-    description: str = Query("")):
+    item_name: str = Body(...),
+    amount: float = Body(..., gt=0),
+    description: str = Body('')):
     
     if expense_id not in expenses:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
