@@ -1,68 +1,48 @@
-from fastapi import FastAPI, HTTPException, status, Path, Query, Body
-from fastapi.responses import JSONResponse
-from typing import Dict
-
+from fastapi import FastAPI, HTTPException, status, Path, Body
+from typing import Dict, List
+from schama import Expense, ExpenseCreate, ExpenseUpdate
 
 app = FastAPI()
 
-expenses: Dict[int, Dict] = {}
+expenses: Dict[int, Expense] = {}
 current_id = 0
 
-@app.get('/')
-def roote():
-    return JSONResponse(content={'message':'this is main page'})
+@app.get('/', tags=["Root"])
+def root():
+    return {"message": "this is main page"}
 
-
-@app.get('/expenses')
+@app.get('/expenses', response_model=List[Expense], tags=["Expenses"])
 def get_all_expenses():
-    content = expenses
-    return JSONResponse(content=content, status_code=status.HTTP_200_OK)
+    return list(expenses.values())
 
-
-@app.post('/create')
-def create_expense(item_name:str= Body(embed=True), amount:float=Body(ge=0), description:str=Body(default='')):
+@app.post("/create", response_model=Expense, status_code=status.HTTP_201_CREATED, tags=["Expenses"])
+def create_expense(expense: ExpenseCreate):
     global current_id
     current_id += 1
-    
-    item = {
-        'id': current_id,
-        'item_name':item_name,
-        'description': description,
-        'amount': amount,
-    }
-    expenses[current_id] = item
-    return JSONResponse(content=f'add {item_name} sucssesfully.', status_code=status.HTTP_201_CREATED) 
-    
+    new_expense = Expense(id=current_id, **expense.model_dump())
+    expenses[current_id] = new_expense
+    return new_expense
 
-
-@app.get("/expenses/{expense_id}")
+@app.get("/expenses/{expense_id}", response_model=Expense, tags=["Expenses"])
 def get_expense(expense_id: int = Path(..., ge=1)):
     if expense_id not in expenses:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
     return expenses[expense_id]
-    
-      
-@app.put("/expenses/{expense_id}")
+
+@app.put("/expenses/{expense_id}", response_model=Expense, tags=["Expenses"])
 def update_expense(
     expense_id: int = Path(..., ge=1),
-    item_name: str = Body(...),
-    amount: float = Body(..., gt=0),
-    description: str = Body('')):
-    
+    updated_expense: ExpenseUpdate = Body(...)
+):
     if expense_id not in expenses:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+    updated = Expense(id=expense_id, **updated_expense.model_dump())
+    expenses[expense_id] = updated
+    return updated
 
-    expenses[expense_id].update({
-        "item_name": item_name,
-        "amount": amount,
-        "description": description
-    })
-    return JSONResponse(content=f'Update {expense_id} sucssesfully. ')
-
-
-@app.delete("/expenses/{expense_id}")
+@app.delete("/expenses/{expense_id}", tags=["Expenses"])
 def delete_expense(expense_id: int = Path(..., ge=1)):
     if expense_id not in expenses:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
     del expenses[expense_id]
-    return {"message": f"Expense {expense_id} deleted successfully"} 
+    return {"message": f"Expense {expense_id} deleted successfully"}
